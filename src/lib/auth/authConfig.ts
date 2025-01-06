@@ -3,6 +3,7 @@ import NextAuth from "next-auth";
 import { pool } from "../postgres";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
+import { compare } from "bcrypt";
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   trustHost: true,
@@ -27,29 +28,61 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         password: {},
       },
       authorize: async (credentials) => {
-        console.log(credentials);
-        // let user = null;
+        const { email: emailCred, password } = credentials;
+        try {
+          const userQuery = await pool.query(
+            `SELECT id, name, email, password, role FROM users WHERE email = $1`,
+            [emailCred]
+          );
 
-        return null;
+          if (userQuery.rows.length === 0) {
+            throw new Error("No user found with this email");
+          }
+          const user = userQuery.rows[0] as {
+            name: string;
+            email: string;
+            id: string;
+            role: string;
+            password: string;
+          };
+
+          const isValidPass = await compare(password as string, user.password);
+
+          if (!isValidPass) {
+            throw new Error("Invalid Credentials");
+          }
+
+          const { email, id, name, role } = user;
+          return {
+            email,
+            id,
+            name,
+            role,
+          };
+        } catch (error) {
+          console.error("Error in auth credentials authorization", error);
+          return null;
+        }
       },
     }),
   ],
+
   callbacks: {
-    async jwt({ token, user }) {
-      if (user) {
-        return { ...token, id: user.id };
-      }
-      return token;
+    authorized: async ({ auth }) => {
+      console.log("PASSING AUTHORIZE", auth);
+      return !!auth;
     },
     async session({ session, token }) {
-      console.log("SESION CALLBACK", { session, token });
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: token.id as string,
-        },
-      };
+      // console.log("SESSION TRIGGER");
+      session.user = token.user;
+      return session;
+    },
+    async jwt({ token, user }) {
+      // console.log("JWT TRIGGER");
+      if (user) {
+        token.user = user;
+      }
+      return token;
     },
   },
 });

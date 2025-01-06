@@ -8,6 +8,7 @@ CREATE TABLE
     email VARCHAR(255),
     "emailVerified" TIMESTAMPTZ,
     image TEXT,
+    password: TEXT,
     role AuthRole NOT NULL DEFAULT 'USER',
     PRIMARY KEY (id)
   );

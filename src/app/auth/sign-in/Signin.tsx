@@ -1,8 +1,9 @@
 import React from "react";
-import { handleGoogleSignin } from "@/lib/auth/googleSignInServerAction";
+import { handleGoogleSignin } from "./actions";
 import { signIn } from "@/lib/auth/authConfig";
+import Link from "next/link";
 
-const Signin = () => {
+const Signin = async () => {
   return (
     <div>
       <h1>Signin</h1>
@@ -23,6 +24,9 @@ const Signin = () => {
         <button>Sign In</button>
       </form>
       <button onClick={handleGoogleSignin}>Sign in with Google</button>
+      <Link href={"/auth/sign-up"}>
+        <p>Don&apos;t have an account?</p>
+      </Link>
     </div>
   );
 };
