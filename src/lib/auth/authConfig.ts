@@ -1,11 +1,14 @@
 import PostgresAdapter from "@auth/pg-adapter";
-import NextAuth from "next-auth";
+import NextAuth, { User } from "next-auth";
 import { pool } from "../postgres";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcrypt";
+import { getToken } from "next-auth/jwt";
+import { NextResponse } from "next/server";
+import { AdapterUser } from "next-auth/adapters";
 
-export const { handlers, signIn, signOut, auth } = NextAuth({
+export const authConfig = NextAuth({
   trustHost: true,
   adapter: PostgresAdapter(pool),
   secret: process.env.AUTH_SECRET,
@@ -68,17 +71,41 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
   ],
 
   callbacks: {
-    authorized: async ({ auth }) => {
-      console.log("PASSING AUTHORIZE", auth);
+    //ACTS AS MIDDLEWARE
+    authorized: async ({ request, auth }) => {
+      console.log("passing middleware");
+      console.log("request pathm", request.nextUrl.pathname);
+      console.log("REQUEST", request);
+      // Retrieve the token
+      const token = await getToken({
+        req: request,
+        secret: process.env.AUTH_SECRET,
+        cookieName: "__Secure-authjs.session-token",
+      });
+      console.log("TOKEN", token);
+
+      // Protect all `/api` routes
+      if (request.nextUrl.pathname.startsWith("/api") && !token) {
+        return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
+      }
+
+      if (request.nextUrl.pathname.startsWith("api/admin") && !token) {
+        return NextResponse.json(
+          { message: "You do not an admin" },
+          { status: 403 }
+        );
+      }
+
+      // Allow the request to continue
+      NextResponse.next();
+
       return !!auth;
     },
     async session({ session, token }) {
-      // console.log("SESSION TRIGGER");
-      session.user = token.user;
+      session.user = token.user as User & AdapterUser; // Added for type error
       return session;
     },
     async jwt({ token, user }) {
-      // console.log("JWT TRIGGER");
       if (user) {
         token.user = user;
       }
@@ -86,3 +113,5 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     },
   },
 });
+
+export const { handlers, signIn, signOut, auth } = authConfig;
