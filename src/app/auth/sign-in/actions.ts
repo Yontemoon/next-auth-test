@@ -11,3 +11,8 @@ export const handleGoogleSignin = async () => {
     throw error;
   }
 };
+
+export const handleCredSignIn = async (formData: FormData) => {
+  await signIn("credentials", formData);
+
+}

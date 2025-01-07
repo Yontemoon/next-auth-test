@@ -1,4 +1,4 @@
-import Signin from "./Signin";
+import { Signin } from "./components";
 import { redirect } from "next/navigation";
 import { checkIsAuthenticated } from "@/lib/auth/checkIsAuthenticated";
 

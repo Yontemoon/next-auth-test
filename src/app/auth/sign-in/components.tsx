@@ -1,18 +1,11 @@
-import React from "react";
-import { handleGoogleSignin } from "./actions";
-import { signIn } from "@/lib/auth/authConfig";
 import Link from "next/link";
+import { handleCredSignIn, handleGoogleSignin } from "./actions";
 
 const Signin = async () => {
   return (
     <div>
       <h1>Signin</h1>
-      <form
-        action={async (formData) => {
-          "use server";
-          await signIn("credentials", formData);
-        }}
-      >
+      <form action={handleCredSignIn}>
         <label>
           Email
           <input name="email" type="email" />
@@ -31,4 +24,4 @@ const Signin = async () => {
   );
 };
 
-export default Signin;
+export { Signin };
