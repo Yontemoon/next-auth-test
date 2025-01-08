@@ -13,7 +13,6 @@ const createUser = async (formData: FormData) => {
   }
 
   try {
-    // Check if the user already exists
     const existingUser = await prisma.user.findUnique({
       where: { email: email as string },
     });
@@ -22,10 +21,8 @@ const createUser = async (formData: FormData) => {
       throw new Error("User already exists");
     }
 
-    // Hash the password
     const hashedPassword = await hash(password, 10);
 
-    // Insert the new user into the database
     const newUser = await prisma.user.create({
       data: {
         name: name as string,

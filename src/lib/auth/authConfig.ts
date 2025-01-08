@@ -88,6 +88,7 @@ export const authConfig = NextAuth({
         return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
       }
 
+      // protects all "/api/admin" routes
       if (request.nextUrl.pathname.startsWith("api/admin") && !token) {
         return NextResponse.json(
           { message: "You do not an admin" },
@@ -95,7 +96,6 @@ export const authConfig = NextAuth({
         );
       }
 
-      // Allow the request to continue
       NextResponse.next();
 
       return !!auth;
