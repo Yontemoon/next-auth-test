@@ -1,6 +1,6 @@
 "use server";
 
-import { pool } from "@/lib/postgres";
+import { prisma } from "@/lib/prisma";
 import { hash } from "bcrypt";
 
 const createUser = async (formData: FormData) => {
@@ -13,33 +13,43 @@ const createUser = async (formData: FormData) => {
   }
 
   try {
-    const existingUser = await pool.query(
-      `SELECT id FROM users WHERE email = $1`,
-      [email]
-    );
+    // Check if the user already exists
+    const existingUser = await prisma.user.findUnique({
+      where: { email: email as string },
+    });
 
-    if (existingUser.rows.length > 0) {
+    if (existingUser) {
       throw new Error("User already exists");
     }
 
+    // Hash the password
     const hashedPassword = await hash(password, 10);
 
-    const insertUserQuery = `
-        INSERT INTO users (name, email, password)
-        VALUES ($1, $2, $3)
-        RETURNING id, name, email, role
-      `;
-
-    await pool.query(insertUserQuery, [name, email, hashedPassword]);
+    // Insert the new user into the database
+    const newUser = await prisma.user.create({
+      data: {
+        name: name as string,
+        email: email as string,
+        password: hashedPassword,
+        role: "USER", // Default role
+      },
+      select: {
+        id: true,
+        name: true,
+        email: true,
+        role: true,
+      },
+    });
 
     return {
       message: "Successfully created user",
       success: true,
+      user: newUser,
     };
   } catch (error) {
-    console.warn(error);
+    console.error(error);
     return {
-      message: error,
+      message: error || "An error occurred",
       success: false,
     };
   }

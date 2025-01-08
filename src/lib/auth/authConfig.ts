@@ -1,16 +1,16 @@
-import PostgresAdapter from "@auth/pg-adapter";
 import NextAuth, { User } from "next-auth";
-import { pool } from "../postgres";
 import Google from "next-auth/providers/google";
 import Credentials from "next-auth/providers/credentials";
 import { compare } from "bcrypt";
 import { getToken } from "next-auth/jwt";
 import { NextResponse } from "next/server";
 import { AdapterUser } from "next-auth/adapters";
+import { PrismaAdapter } from "@auth/prisma-adapter";
+import { prisma } from "@/lib/prisma";
 
 export const authConfig = NextAuth({
   trustHost: true,
-  adapter: PostgresAdapter(pool),
+  adapter: PrismaAdapter(prisma),
   secret: process.env.AUTH_SECRET,
   session: {
     strategy: "jwt",
@@ -31,37 +31,41 @@ export const authConfig = NextAuth({
         password: {},
       },
       authorize: async (credentials) => {
-        const { email: emailCred, password } = credentials;
+        console.log(credentials);
+        const { email: emailCred, password } = credentials as {
+          email: string;
+          password: string;
+        };
         try {
-          const userQuery = await pool.query(
-            `SELECT id, name, email, password, role FROM users WHERE email = $1`,
-            [emailCred]
-          );
+          // Fetch user by email using Prisma
+          const user = await prisma.user.findUnique({
+            where: { email: emailCred },
+            select: {
+              id: true,
+              name: true,
+              email: true,
+              role: true,
+              password: true,
+            },
+          });
 
-          if (userQuery.rows.length === 0) {
+          if (!user) {
             throw new Error("No user found with this email");
           }
-          const user = userQuery.rows[0] as {
-            name: string;
-            email: string;
-            id: string;
-            role: string;
-            password: string;
-          };
 
-          const isValidPass = await compare(password as string, user.password);
+          // Validate the password
+          const isValidPass = await compare(
+            password as string,
+            user.password as string
+          );
 
           if (!isValidPass) {
             throw new Error("Invalid Credentials");
           }
 
-          const { email, id, name, role } = user;
-          return {
-            email,
-            id,
-            name,
-            role,
-          };
+          // Return user data (excluding password)
+          const { id, name, email, role } = user;
+          return { id, name, email, role };
         } catch (error) {
           console.error("Error in auth credentials authorization", error);
           return null;
@@ -73,16 +77,11 @@ export const authConfig = NextAuth({
   callbacks: {
     //ACTS AS MIDDLEWARE
     authorized: async ({ request, auth }) => {
-      console.log("passing middleware");
-      console.log("request pathm", request.nextUrl.pathname);
-      console.log("REQUEST", request);
-      // Retrieve the token
       const token = await getToken({
         req: request,
         secret: process.env.AUTH_SECRET,
         cookieName: "__Secure-authjs.session-token",
       });
-      console.log("TOKEN", token);
 
       // Protect all `/api` routes
       if (request.nextUrl.pathname.startsWith("/api") && !token) {

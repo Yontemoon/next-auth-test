@@ -44,3 +44,5 @@ certificates
 
 /database/pgadmin_data
 /database/postgres_data
+
+/database/mysql_data

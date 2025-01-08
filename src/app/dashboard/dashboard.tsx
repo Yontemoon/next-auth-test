@@ -15,7 +15,6 @@ const Dashboard = async () => {
       headers: new Headers(await headers()),
     });
     videos = await response.json();
-    console.log(videos);
   } else if (authInfo?.user?.role === "ADMIN") {
     const response = await fetch("https://localhost:3000/api/admin/videos", {
       headers: new Headers(await headers()),
@@ -28,6 +27,8 @@ const Dashboard = async () => {
       Dashboard
       <SignoutButton />
       <div>{JSON.stringify(videos)}</div>
+      <div>User information:</div>
+      <div>{JSON.stringify(authInfo)}</div>
     </div>
   );
 };
