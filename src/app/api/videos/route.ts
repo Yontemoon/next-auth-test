@@ -1,9 +1,8 @@
-import { auth } from "@/lib/auth/authConfig";
 import { NextResponse } from "next/server";
 
 // THIS ROUTE IS PROTECTED
 
-export const GET = auth(async function GET() {
+export const GET = async function GET() {
   try {
     return NextResponse.json({
       data: {
@@ -18,4 +17,4 @@ export const GET = auth(async function GET() {
       status: 400,
     });
   }
-});
+};
