@@ -12,7 +12,7 @@ const HomePage = async () => {
   }
   return (
     <div className="flex justify-center items-center m-auto h-screen w-full align-middle">
-      Home
+      Home!
       <SignInButton />
     </div>
   );
