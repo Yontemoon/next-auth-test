@@ -3,32 +3,32 @@
 
 import React from "react";
 import SignoutButton from "@/components/sign-out-button";
-import { headers } from "next/headers";
-import { auth } from "@/lib/auth/authConfig";
+// import { headers } from "next/headers";
+// import { auth } from "@/lib/auth/authConfig";
 const Dashboard = async () => {
-  const authInfo = await auth();
+  // const authInfo = await auth();
 
-  let videos = null;
+  // let videos = null;
 
-  if (authInfo?.user?.role === "USER") {
-    const response = await fetch("https://localhost:3000/api/videos", {
-      headers: new Headers(await headers()),
-    });
-    videos = await response.json();
-  } else if (authInfo?.user?.role === "ADMIN") {
-    const response = await fetch("https://localhost:3000/api/admin/videos", {
-      headers: new Headers(await headers()),
-    });
-    videos = await response.json();
-  }
+  // if (authInfo?.user?.role === "USER") {
+  //   const response = await fetch("https://localhost:3000/api/videos", {
+  //     headers: new Headers(await headers()),
+  //   });
+  //   videos = await response.json();
+  // } else if (authInfo?.user?.role === "ADMIN") {
+  //   const response = await fetch("https://localhost:3000/api/admin/videos", {
+  //     headers: new Headers(await headers()),
+  //   });
+  //   videos = await response.json();
+  // }
 
   return (
     <div>
       Dashboard
       <SignoutButton />
-      <div>{JSON.stringify(videos)}</div>
+      {/* <div>{JSON.stringify(videos)}</div>
       <div>User information:</div>
-      <div>{JSON.stringify(authInfo)}</div>
+      <div>{JSON.stringify(authInfo)}</div> */}
     </div>
   );
 };
